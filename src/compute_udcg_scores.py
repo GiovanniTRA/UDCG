@@ -7,7 +7,7 @@ scores to predict how well a language model will perform on a question-answering
 
 The metric uses:
 - Relevance labels (is_relevant: True/False) for each passage
-- Distracting scores (no_res_prob) that indicate how likely the model is to abstain
+- Abstention scores (no_res_prob) that indicate how likely the model is to abstain
   when given only that passage
 
 The UDCG score is computed as:
@@ -19,36 +19,46 @@ Input format:
   - "question": the question text
   - "passages": list of passage objects, each with:
     - "is_relevant": boolean indicating if passage is relevant
-    - "no_res_prob_{model_key}": distracting score for that model
+    - "no_res_prob": abstention score for that model
     - other optional fields
 
 Output format:
   A JSON file with the same structure, plus additional fields:
-  - "udcg_{model_key}": the UDCG score for that item
+  - "udcg": the UDCG score for that item
 """
 
+import os
+import math
 import json
 import argparse
-import os
-from typing import List, Dict
-import math
+
+from copy import deepcopy
+from utils import read_json, write_json
 
 
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))
 
 
-def compute_udcg_score(passages: List[Dict], model_key: str,
-                       relevant_weight: float = 1.0,
-                       irrelevant_weight: float = -1/3) -> float:
+def get_no_res_prob(passage: dict, model_id: str) -> float:
+    """Extract no_res_prob from passage dictionary."""
+    return passage.get('models_info', {}).get(model_id, {}).get('no_res_prob', None)
+
+
+def compute_udcg_score(
+    passages: list[dict], 
+    model_id: str,
+    relevant_weight: float = 1.0,
+    irrelevant_weight: float = -1/3
+) -> float:
     """
     Compute UDCG (Utility and Distraction-aware Cumulative Gain) score.
 
     Args:
-        passages: List of passage dictionaries with 'is_relevant' and distracting scores
-        model_key: Key to identify which distracting score to use (e.g., 'llama-3.2-3b')
+        passages: List of passage dictionaries with 'is_relevant' and abstention scores
+        model_id: Model ID
         relevant_weight: Weight for relevant passages (default: 1.0)
-        irrelevant_weight: Weight for irrelevant passages (default: -1/3)
+        irrelevant_weight: Negative weight for irrelevant passages (default: -1/3)
 
     Returns:
         UDCG score (higher is better)
@@ -56,23 +66,22 @@ def compute_udcg_score(passages: List[Dict], model_key: str,
     if len(passages) == 0:
         return 0.0
 
-    no_res_prob_key = f"no_res_prob_{model_key}"
-
     score = 0.0
     for passage in passages:
+        no_res_prob = get_no_res_prob(passage, model_id)
+
         # Check if passage has the required distracting score
-        if no_res_prob_key not in passage:
-            print(f"Warning: Passage missing {no_res_prob_key}, skipping")
+        if no_res_prob is None:
+            print(f"Warning: Passage missing no_res_prob, skipping")
+            continue
+        
+        if 'is_relevant' not in passage:
+            print(f"Warning: Passage missing is_relevant field, skipping")
             continue
 
         is_relevant = passage.get('is_relevant', False)
-        no_res_prob = passage[no_res_prob_key]
 
-        # Skip if score is None
-        if no_res_prob is None:
-            continue
-
-        # Convert distracting score to utility score (1 - no_res_prob)
+        # Convert abstention score to utility score (1 - no_res_prob)
         doc_score = 1.0 - no_res_prob
 
         # Apply weights based on relevance
@@ -87,18 +96,30 @@ def compute_udcg_score(passages: List[Dict], model_key: str,
     return sigmoid(score)
 
 
+def update_item_with_udcg_score(
+    item: dict,
+    model_id: str,
+    udcg_score: float
+) -> None:
+    """Update item dictionary with UDCG score information."""
+    if 'udcg' not in item:
+        item['udcg'] = {}
+
+    item['udcg'][model_id] = udcg_score
+
+
 def process_dataset(
-    dataset: List[Dict],
-    model_key: str,
+    dataset: list[dict],
+    model_id: str,
     relevant_weight: float = 1.0,
     irrelevant_weight: float = -1/3
-) -> List[Dict]:
+) -> list[dict]:
     """
     Process dataset and add UDCG scores.
 
     Args:
         dataset: List of items with questions and passages
-        model_key: Key to identify model scores
+        model_id: Key to identify model scores
         relevant_weight: Weight for relevant passages
         irrelevant_weight: Weight for irrelevant passages
 
@@ -111,19 +132,22 @@ def process_dataset(
         passages = item.get('passages', [])
 
         # Create a copy of the item
-        result_item = json.loads(json.dumps(item))
+        result_item = deepcopy(item)
 
         # Compute UDCG score
         udcg_score = compute_udcg_score(
             passages,
-            model_key,
+            model_id,
             relevant_weight,
             irrelevant_weight
         )
 
         # Add UDCG score to item
-        udcg_key = f"udcg_{model_key}"
-        result_item[udcg_key] = udcg_score
+        update_item_with_udcg_score(
+            result_item,
+            model_id,
+            udcg_score
+        )
 
         print(f"Item {item_idx + 1}/{len(dataset)}: UDCG = {udcg_score:.4f}")
 
@@ -139,20 +163,20 @@ def main():
     parser.add_argument(
         "--input",
         type=str,
-        default="../data/sample_dataset_with_ds.json",
+        default="data/sample_dataset_with_ds.json",
         help="Path to input JSON file with passages and distracting scores"
     )
     parser.add_argument(
         "--output",
         type=str,
-        default="../data/sample_output.json",
+        default="data/sample_output.json",
         help="Path to output JSON file with UDCG scores"
     )
     parser.add_argument(
-        "--model_key",
+        "--model_id",
         type=str,
-        default="llama-3.2-3b",
-        help="Model key to identify which distracting scores to use (e.g., llama-3.2-3b). Must match the one used in the previous step"
+        default="meta-llama/Llama-3.2-3B-Instruct",
+        help="Hugging Face model name (e.g., meta-llama/Llama-3.2-3B-Instruct)"
     )
     parser.add_argument(
         "--relevant_weight",
@@ -170,18 +194,17 @@ def main():
     args = parser.parse_args()
 
     print(f"Loading dataset from: {args.input}")
-    with open(args.input, 'r') as f:
-        dataset = json.load(f)
+    dataset = read_json(args.input)
 
     print(f"Loaded {len(dataset)} items")
-    print(f"Using model_key: {args.model_key}")
+    print(f"Using model: {args.model_id}")
     print(f"Relevant weight: {args.relevant_weight}")
     print(f"Irrelevant weight: {args.irrelevant_weight}")
 
     # Process dataset
     results = process_dataset(
         dataset,
-        args.model_key,
+        args.model_id,
         args.relevant_weight,
         args.irrelevant_weight
     )
@@ -189,13 +212,10 @@ def main():
     # Save results
     print(f"Saving results to: {args.output}")
     os.makedirs(os.path.dirname(args.output) if os.path.dirname(args.output) else '.', exist_ok=True)
-
-    with open(args.output, 'w') as f:
-        json.dump(results, f, indent=2)
+    write_json(results, args.output)
 
     # Print summary statistics
-    udcg_key = f"udcg_{args.model_key}"
-    udcg_scores = [item[udcg_key] for item in results if udcg_key in item]
+    udcg_scores = [item['udcg'][args.model_id] for item in results if 'udcg' in item and args.model_id in item['udcg']]
 
     if udcg_scores:
         import statistics

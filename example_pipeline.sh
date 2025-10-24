@@ -14,8 +14,7 @@ echo ""
 INPUT_FILE="data/sample_dataset.json"
 SCORES_FILE="data/dataset_with_scores.json"
 FINAL_FILE="data/dataset_with_udcg.json"
-MODEL="meta-llama/Llama-3.2-3B-Instruct"
-MODEL_KEY="llama-3.2-3b"
+MODEL_ID="meta-llama/Llama-3.2-3B-Instruct"
 
 # Check if input file exists
 if [ ! -f "$INPUT_FILE" ]; then
@@ -30,11 +29,10 @@ echo "Input: $INPUT_FILE"
 echo "Output: $SCORES_FILE"
 echo ""
 
-python src/compute_distracting_scores.py \
+python src/compute_abstention_probability.py \
     --input "$INPUT_FILE" \
     --output "$SCORES_FILE" \
-    --model "$MODEL" \
-    --model_key "$MODEL_KEY" \
+    --model_id "$MODEL_ID" \
     --device auto \
     --dtype float16
 
@@ -50,7 +48,7 @@ echo ""
 python src/compute_udcg_scores.py \
     --input "$SCORES_FILE" \
     --output "$FINAL_FILE" \
-    --model_key "$MODEL_KEY" \
+    --model_id "$MODEL_ID" \
     --relevant_weight 1.0 \
     --irrelevant_weight -0.333
 

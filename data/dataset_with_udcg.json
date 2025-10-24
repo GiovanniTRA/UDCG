@@ -1,0 +1,179 @@
+[
+  {
+    "example_id": "example_1",
+    "question": "What is the capital of France?",
+    "passages": [
+      {
+        "doc_id": "doc_1",
+        "text": "France is a country in Western Europe. Its capital and largest city is Paris.",
+        "is_relevant": true,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 2.086162567138672e-06
+          }
+        }
+      },
+      {
+        "doc_id": "doc_2",
+        "text": "Paris is the capital and most populous city of France.",
+        "is_relevant": true,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 1.341104507446289e-05
+          }
+        }
+      },
+      {
+        "doc_id": "doc_3",
+        "text": "Lyon is the third-largest city in France, after Paris and Marseille.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.1318359375
+          }
+        }
+      },
+      {
+        "doc_id": "doc_4",
+        "text": "Germany is a country in Central Europe. Berlin is its capital.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.1812744140625
+          }
+        }
+      },
+      {
+        "doc_id": "doc_5",
+        "text": "The European Union is a political and economic union of member states.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.02081298828125
+          }
+        }
+      }
+    ],
+    "udcg": {
+      "meta-llama/Llama-3.2-3B-Instruct": 0.5553808928170055
+    }
+  },
+  {
+    "example_id": "example_2",
+    "question": "Who wrote Romeo and Juliet?",
+    "passages": [
+      {
+        "doc_id": "doc_6",
+        "text": "Romeo and Juliet is a tragedy written by William Shakespeare early in his career.",
+        "is_relevant": true,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 5.960464477539063e-08
+          }
+        }
+      },
+      {
+        "doc_id": "doc_7",
+        "text": "William Shakespeare was an English playwright and poet, regarded as the greatest writer in the English language.",
+        "is_relevant": true,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 6.616115570068359e-06
+          }
+        }
+      },
+      {
+        "doc_id": "doc_8",
+        "text": "Hamlet is a tragedy by William Shakespeare, written around 1600.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.00018215179443359375
+          }
+        }
+      },
+      {
+        "doc_id": "doc_9",
+        "text": "Christopher Marlowe was an English playwright and poet in Elizabethan England.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.006114959716796875
+          }
+        }
+      },
+      {
+        "doc_id": "doc_10",
+        "text": "The Elizabethan era is the period associated with the reign of Queen Elizabeth I.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.0093536376953125
+          }
+        }
+      }
+    ],
+    "udcg": {
+      "meta-llama/Llama-3.2-3B-Instruct": 0.5501411475208001
+    }
+  },
+  {
+    "example_id": "example_3",
+    "question": "What is the chemical symbol for gold?",
+    "passages": [
+      {
+        "doc_id": "doc_11",
+        "text": "Gold is a chemical element with the symbol Au and atomic number 79.",
+        "is_relevant": true,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 3.0100345611572266e-05
+          }
+        }
+      },
+      {
+        "doc_id": "doc_12",
+        "text": "The periodic table organizes all chemical elements by their atomic number.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.00010311603546142578
+          }
+        }
+      },
+      {
+        "doc_id": "doc_13",
+        "text": "Silver is a chemical element with the symbol Ag and atomic number 47.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.007602691650390625
+          }
+        }
+      },
+      {
+        "doc_id": "doc_14",
+        "text": "Copper is a chemical element with the symbol Cu and atomic number 29.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.01299285888671875
+          }
+        }
+      },
+      {
+        "doc_id": "doc_15",
+        "text": "Precious metals include gold, silver, and platinum, valued for their rarity.",
+        "is_relevant": false,
+        "models_info": {
+          "meta-llama/Llama-3.2-3B-Instruct": {
+            "no_res_prob": 0.00013053417205810547
+          }
+        }
+      }
+    ],
+    "udcg": {
+      "meta-llama/Llama-3.2-3B-Instruct": 0.4837510250741193
+    }
+  }
+]

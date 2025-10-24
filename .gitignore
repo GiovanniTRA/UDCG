@@ -49,6 +49,8 @@ Thumbs.db
 # Data (keep structure but ignore large files)
 data/*.json
 !data/sample_dataset.json
+!data/dataset_with_scores.json
+!data/dataset_with_udcg.json
 
 # Model cache
 models/

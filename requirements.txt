@@ -1,10 +1,10 @@
 # Core dependencies
-torch>=2.0.0
-transformers>=4.35.0
+torch>=2.5.1
+transformers>=4.56.0
 numpy>=1.24.0
 
 # Optional: for better performance
-accelerate>=0.25.0
+accelerate>=1.10.1
 
 # For CUDA support (install appropriate version for your system)
 # See: https://pytorch.org/get-started/locally/

@@ -7,7 +7,7 @@ This repository contains code to compute UDCG (Utility and Distraction-aware Cum
 The UDCG metric evaluates how well a set of passages will help a language model answer a question. It combines two key signals:
 
 1. **Relevance labels** - which passages contain the answer
-2. **Distracting scores** - how likely each passage is to confuse the model
+2. **Utility scores** - how passages are expected to help the LLM to answer the query
 
 
 ## Citation
@@ -47,41 +47,39 @@ pip install -r requirements.txt
 
 The pipeline consists of two main steps:
 
-### 1. Compute Distracting Scores
+### 1. Compute Abstention Scores
 
 First, compute how likely a language model is to abstain (respond with "NO-RESPONSE") when given each passage individually:
 
 ```bash
-python src/compute_distracting_scores.py \
+python src/compute_abstention_probability.py \
   --input data/sample_dataset.json \
   --output data/dataset_with_scores.json \
-  --model meta-llama/Llama-3.2-3B-Instruct \
-  --model_key llama-3.2-3b
+  --model_id meta-llama/Llama-3.2-3B-Instruct \
 ```
 
 **Arguments:**
 - `--input`: Input JSON file with questions and passages (look at sample_dataset.json to see an example)
 - `--output`: Output file to save results
-- `--model`: Hugging Face model name
-- `--model_key`: Short identifier for the model (used in output fields)
+- `--mode_id`: Hugging Face model name
 - `--device`: Device to use (auto, cuda, cpu) [default: auto]
 - `--dtype`: Model precision (float16, bfloat16, float32) [default: float16]
 
 ### 2. Compute UDCG Scores
 
-Then, combine relevance labels (we assume you have already collected passage relevance either through human evaluation or llm-as-a-judge) and distracting scores to compute the UDCG metric:
+Then, combine relevance labels (we assume you have already collected passage relevance either through human evaluation or llm-as-a-judge) and abstention scores to compute the UDCG metric:
 
 ```bash
 python src/compute_udcg_scores.py \
   --input data/dataset_with_scores.json \
   --output data/dataset_with_udcg.json \
-  --model_key llama-3.2-3b
+  --model_id meta-llama/Llama-3.2-3B-Instruct \
 ```
 
 **Arguments:**
-- `--input`: Input file with distracting scores from step 1
+- `--input`: Input file with abstention scores (output file from step 1)
 - `--output`: Output file with UDCG scores
-- `--model_key`: Model identifier (must match the one used in step 1)
+- `--model_id`: Hugging Face model name
 - `--relevant_weight`: Weight for relevant passages [default: 1.0]
 - `--irrelevant_weight`: Weight for irrelevant passages [default: -0.333]
 
@@ -127,14 +125,18 @@ Your input JSON file should contain a list of items with this structure:
 
 After running both scripts, each item will have:
 
-1. **Distracting scores** added to each passage:
+1. **Abstention scores** added to each passage:
 ```json
 {
   "passages": [
     {
       "text": "...",
       "is_relevant": true,
-      "no_res_prob_llama-3.2-3b": 0.0234
+      "models_info": {
+        "meta-llama/Llama-3.2-3B-Instruct": {
+          "no_res_prob": 0.0234
+        }
+      }
     }
   ]
 }
@@ -145,13 +147,15 @@ After running both scripts, each item will have:
 {
   "question": "...",
   "passages": [...],
-  "udcg_llama-3.2-3b": 0.4521
+  "udcg": {
+    "meta-llama/Llama-3.2-3B-Instruct": 0.4521,
+  }
 }
 ```
 
 ## Understanding the Metrics
 
-### Distracting Score (`no_res_prob`)
+### Abstention Score (`no_res_prob`)
 
 - Range: 0 to 1
 - **Higher** values mean the passage is more likely to cause the model to abstain
@@ -171,20 +175,19 @@ The metric balances two factors:
 ## Example: Complete Pipeline
 
 ```bash
-# Step 1: Compute distracting scores
-python src/compute_distracting_scores.py \
+# Step 1: Compute abstention scores
+python src/compute_abstention_probability.py \
   --input data/sample_dataset.json \
-  --output data/with_scores.json \
-  --model meta-llama/Llama-3.2-3B-Instruct \
-  --model_key llama-3b
+  --output data/dataset_with_scores.json \
+  --model_id meta-llama/Llama-3.2-3B-Instruct
 
 # Step 2: Compute UDCG scores
 python src/compute_udcg_scores.py \
-  --input data/with_scores.json \
-  --output data/final_results.json \
-  --model_key llama-3b
+  --input data/dataset_with_scores.json \
+  --output data/dataset_with_udcg.json \
+  --model_id meta-llama/Llama-3.2-3B-Instruct
 
-# Results will be in data/final_results.json
+# Results will be in data/dataset_with_udcg.json
 ```
 
 ## Supported Models
@@ -193,6 +196,7 @@ The code works with any Hugging Face causal language model that supports chat te
 
 - `meta-llama/Llama-3.2-3B-Instruct`
 - `meta-llama/Llama-3.1-8B-Instruct`
+- `meta-llama/Llama-3.3-70B-Instruct`
 - `google/gemma-3-4b-it`
 - `mistralai/Mistral-7B-Instruct-v0.3`
 - `Qwen/Qwen2.5-7B-Instruct`
