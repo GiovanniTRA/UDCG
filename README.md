@@ -13,13 +13,16 @@ The UDCG metric evaluates how well a set of passages will help a language model 
 ## Citation
 
 If you use this code in your research, please cite our paper:
-
+**"Redefining Retrieval Evaluation in the Era of LLMs"**
 ```bibtex
-@article{your_paper_2025,
-  title={Your Paper Title},
-  author={Your Names},
-  journal={Venue},
-  year={2025}
+@misc{trappolini2025redefiningretrievalevaluationera,
+      title={Redefining Retrieval Evaluation in the Era of LLMs}, 
+      author={Giovanni Trappolini and Florin Cuconasu and Simone Filice and Yoelle Maarek and Fabrizio Silvestri},
+      year={2025},
+      eprint={2510.21440},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2510.21440}, 
 }
 ```
 
